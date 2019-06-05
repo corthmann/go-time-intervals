@@ -53,3 +53,18 @@ func TestInterval_In(t *testing.T) {
 		assert.Equal(t, expected, in.In(given))
 	}
 }
+
+func TestInterval_ISO8601(t *testing.T) {
+	expectations := []string{
+		"2019-01-02T21:00:00Z/2022-01-03T21:00:00Z",
+		"2019-01-02T21:00:00Z/P1W",
+		"P1W/2022-01-03T21:00:00Z",
+	}
+	for _, expectation := range expectations {
+		in, err := ParseIntervalISO8601(expectation)
+		assert.Nil(t, err)
+		result, err := in.ISO8601()
+		assert.Nil(t, err)
+		assert.Equal(t, expectation, result)
+	}
+}

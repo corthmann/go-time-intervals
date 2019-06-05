@@ -92,3 +92,19 @@ func TestRepeatingInterval_Ended(t *testing.T) {
 	in.Repetitions = nil
 	assert.False(t, in.Ended(startsAt.Add(time.Duration(repetitions+1) * duration)))
 }
+
+func TestRepeatingInterval_ISO8601(t *testing.T) {
+	expectations := []string{
+		"R/2019-01-02T21:00:00Z/2022-01-03T21:00:00Z",
+		"R/2019-01-02T21:00:00Z/P1W",
+		"R/P1W/2022-01-03T21:00:00Z",
+		"R10/P1W/2022-01-03T21:00:00Z",
+	}
+	for _, expectation := range expectations {
+		in, err := ParseRepeatingIntervalISO8601(expectation)
+		assert.Nil(t, err)
+		result, err := in.ISO8601()
+		assert.Nil(t, err)
+		assert.Equal(t, expectation, result)
+	}
+}

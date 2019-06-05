@@ -1,6 +1,7 @@
 package timeinterval
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -10,7 +11,7 @@ import (
 // or by a fixed startsAt with a fixed number of Repetitions from which the endsAt will be derived.
 // or by a fixed endsAt with a fixed number of Repetitions from which the startsAt will be derived.
 type RepeatingInterval struct {
-	Interval TimeInterval
+	Interval Interval
 	RepeatIn time.Duration
 	Repetitions *uint32
 }
@@ -86,6 +87,43 @@ func (in RepeatingInterval) Next(t time.Time) *time.Time {
 		return nil
 	}
 	return &nxt
+}
+
+
+// ISO8691 returns the repeating interval formatted as an ISO8601 repeating interval string.
+// An error is returned if formatting fails.
+func (in RepeatingInterval) ISO8601() (string, error) {
+	startsAt := in.Interval.StartsAt()
+	endsAt := in.Interval.EndsAt()
+	var startString string
+	var endString string
+	if in.Interval.StartsAtDerivedFromDuration() {
+		d := in.RepeatIn
+		s, err := durationToISO8601(d)
+		startString = s
+		if err != nil {
+			return "", err
+		}
+		s = endsAt.Format(time.RFC3339)
+		endString = s
+
+	} else if in.Interval.EndsAtDerivedFromDuration() {
+		d := in.RepeatIn
+		s, err := durationToISO8601(d)
+		endString = s
+		if err != nil {
+			return "", err
+		}
+		s = startsAt.Format(time.RFC3339)
+		startString = s
+	} else {
+		startString = startsAt.Format(time.RFC3339)
+		endString = endsAt.Format(time.RFC3339)
+	}
+	if in.Repetitions != nil {
+		return fmt.Sprintf("R%d/%s/%s", *in.Repetitions, startString, endString), nil
+	}
+	return fmt.Sprintf("R/%s/%s", startString, endString), nil
 }
 
 // isStartsAtBoundedByRepetitions returns a boolean which indicate if startsAt is unset

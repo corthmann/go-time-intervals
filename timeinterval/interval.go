@@ -1,6 +1,9 @@
 package timeinterval
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // Interval describes an interval which can be bounded by a startsAt and/or an endsAt time.
 // If startsAt is unset it will be interpreted as "unbounded" (goes infinitely long back in time).
@@ -14,7 +17,7 @@ type Interval struct {
 
 // StartsAt returns the time the interval starts or nil if it does not have a lower bound.
 func (in Interval) StartsAt() *time.Time {
-	if in.startsAt == nil && in.endsAt != nil && in.duration != nil {
+	if in.StartsAtDerivedFromDuration() {
 		startsAt := in.endsAt.Add(-*in.duration)
 		return &startsAt
 	}
@@ -23,7 +26,7 @@ func (in Interval) StartsAt() *time.Time {
 
 // EndsAt returns the time the interval ends or nil if it does not have an upper bound.
 func (in Interval) EndsAt() *time.Time {
-	if in.endsAt == nil && in.startsAt != nil && in.duration != nil {
+	if in.EndsAtDerivedFromDuration() {
 		endsAt := in.startsAt.Add(*in.duration)
 		return &endsAt
 	}
@@ -63,4 +66,44 @@ func (in Interval) Ended(t time.Time) bool {
 // In returns a boolean indicating if the given time is when the interval is active (Started and not Ended)
 func (in Interval) In(t time.Time) bool {
 	return in.Started(t) && !in.Ended(t)
+}
+
+// StartsAtDerivedFromDuration returns a boolean that indicates if Interval#StartsAt() is derived by
+// the combination of EndsAt() and duration.
+func (in Interval) StartsAtDerivedFromDuration() bool {
+	return in.startsAt == nil && in.endsAt != nil && in.duration != nil
+}
+
+// EndsAtDerivedFromDuration returns a boolean that indicates if Interval#EndsAt() is derived by
+// the combination of StartsAt() and duration.
+func (in Interval) EndsAtDerivedFromDuration() bool {
+	return in.endsAt == nil && in.startsAt != nil && in.duration != nil
+}
+
+// ISO8691 returns the interval formatted as an ISO8601 interval string.
+// An error is returned if formatting fails.
+func (in Interval) ISO8601() (string, error) {
+	startsAt := in.StartsAt()
+	endsAt := in.EndsAt()
+	var startString string
+	var endString string
+	if in.StartsAtDerivedFromDuration() {
+		s, err := durationToISO8601(*in.duration)
+		if err != nil {
+			return "", err
+		}
+		startString = s
+		endString = endsAt.Format(time.RFC3339)
+	} else if in.EndsAtDerivedFromDuration() {
+		s, err := durationToISO8601(*in.duration)
+		if err != nil {
+			return "", err
+		}
+		endString = s
+		startString = startsAt.Format(time.RFC3339)
+	} else {
+		startString = startsAt.Format(time.RFC3339)
+		endString = endsAt.Format(time.RFC3339)
+	}
+	return fmt.Sprintf("%s/%s", startString, endString), nil
 }

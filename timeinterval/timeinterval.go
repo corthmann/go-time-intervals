@@ -2,6 +2,7 @@ package timeinterval
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,6 +20,9 @@ const TypeTime formatType = 1
 // TypeDuration indicates that the given string is am ISO8601 duration string
 const TypeDuration formatType = 2
 
+const durationWeek = 7 * 24 * time.Hour
+const durationDay = 24 * time.Hour
+
 // TimeInterval is an interface that describes the API supported
 // for all intervals implemented in the timeinterval package.
 type TimeInterval interface {
@@ -35,6 +39,9 @@ type TimeInterval interface {
 	Ended(t time.Time) bool
 	// In returns a boolean indicating if the given time is while the interval is active (Started and not Ended)
 	In(t time.Time) bool
+
+	// ISO8601 returns the interval formatted according to ISO-8601 and an error if formatting fails.
+	ISO8601() (string, error)
 }
 
 // RepeatingTimeInterval is an interface that describes the API supported by intervals with repeating events.
@@ -131,7 +138,7 @@ func identifyIntervalTypes(parts []string) ([]formatType, error) {
 			return nil, err
 		}
 		if ft == TypeUnknown {
-			return types, errors.New("unvalid interval format")
+			return types, errors.New("invalid interval format")
 		}
 		types[i] = ft
 	}
@@ -168,12 +175,12 @@ func parseDurationString(s string) (time.Duration, error) {
 		case "W":
 			{
 				countStr = ""
-				d += time.Duration(currentCount) * 7 * 24 * time.Hour
+				d += time.Duration(currentCount) * durationWeek
 			}
 		case "D":
 			{
 				countStr = ""
-				d += time.Duration(currentCount) * 24 * time.Hour
+				d += time.Duration(currentCount) * durationDay
 			}
 		default:
 			countStr += c
@@ -186,4 +193,21 @@ func parseDurationString(s string) (time.Duration, error) {
 		}
 	}
 	return d, nil
+}
+
+func durationToISO8601(d time.Duration) (string, error) {
+	durationLeft := d
+	iso := "P"
+	if durationLeft >= durationWeek {
+		iso += fmt.Sprintf("%dW", durationLeft/durationWeek)
+		durationLeft -= (durationLeft/durationWeek) * durationWeek
+	}
+	if durationLeft >= durationDay {
+		iso += fmt.Sprintf("%dD", durationLeft/durationDay)
+		durationLeft -= (durationLeft/durationDay) * durationDay
+	}
+	if durationLeft != 0 {
+		return iso, errors.New("duration could not be represented with the supported duration types")
+	}
+	return iso, nil
 }
