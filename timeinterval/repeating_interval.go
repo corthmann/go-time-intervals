@@ -1,6 +1,7 @@
 package timeinterval
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -14,6 +15,30 @@ type RepeatingInterval struct {
 	Interval Interval
 	RepeatIn time.Duration
 	Repetitions *uint32
+}
+
+// UnmarshalJSON unmarshal RepeatingInterval from an ISO8601 "repeating interval" string.
+func (in *RepeatingInterval) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+	ri, err := ParseRepeatingIntervalISO8601(s)
+	if err != nil {
+		return err
+	}
+	*in = *ri
+	return nil
+}
+
+// MarshalJSON marshal RepeatingInterval into an ISO8601 "repeating interval" string.
+func (in RepeatingInterval) MarshalJSON() ([]byte, error) {
+	s, err := in.ISO8601()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(s)
 }
 
 // StartsAt returns the time the interval begins.

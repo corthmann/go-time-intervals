@@ -1,6 +1,8 @@
 package timeinterval
 
 import (
+	"encoding/json"
+	"strconv"
 	"testing"
 	"time"
 
@@ -66,5 +68,44 @@ func TestInterval_ISO8601(t *testing.T) {
 		result, err := in.ISO8601()
 		assert.Nil(t, err)
 		assert.Equal(t, expectation, result)
+	}
+}
+
+func TestInterval_MarshalJSON(t *testing.T) {
+	expectations := []string{
+		"2019-01-02T21:00:00Z/2022-01-03T21:00:00Z",
+		"2019-01-02T21:00:00Z/P1W",
+		"P1W/2022-01-03T21:00:00Z",
+	}
+	for _, expected := range expectations {
+		// Parse & Marshal interval
+		in, err := ParseIntervalISO8601(expected)
+		assert.Nil(t, err)
+		b, err := json.Marshal(in)
+		assert.Nil(t, err)
+		// Unqoute result and compare to input
+		result, err := strconv.Unquote(string(b))
+		assert.Nil(t, err)
+		assert.Equal(t, expected, result)
+	}
+}
+
+func TestInterval_UnmarshalJSON(t *testing.T) {
+	expectations := []string{
+		"2019-01-02T21:00:00Z/2022-01-03T21:00:00Z",
+		"2019-01-02T21:00:00Z/P1W",
+		"P1W/2022-01-03T21:00:00Z",
+	}
+	for _, input := range expectations {
+		// Parse & Marshal interval
+		expected, err := ParseIntervalISO8601(input)
+		assert.Nil(t, err)
+		b, err := json.Marshal(expected)
+		assert.Nil(t, err)
+		// Unmarshal and evaluate the result
+		result := Interval{}
+		err = json.Unmarshal(b, &result)
+		assert.Nil(t, err)
+		assert.Equal(t, expected, &result)
 	}
 }

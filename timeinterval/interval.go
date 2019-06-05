@@ -1,6 +1,7 @@
 package timeinterval
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -13,6 +14,30 @@ type Interval struct {
 	startsAt *time.Time
 	endsAt   *time.Time
 	duration *time.Duration
+}
+
+// UnmarshalJSON unmarshal Interval from an ISO8601 "interval" string.
+func (in *Interval) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+	i, err := ParseIntervalISO8601(s)
+	if err != nil {
+		return err
+	}
+	*in = *i
+	return nil
+}
+
+// MarshalJSON marshal Interval into an ISO8601 "interval" string.
+func (in Interval) MarshalJSON() ([]byte, error) {
+	s, err := in.ISO8601()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(s)
 }
 
 // StartsAt returns the time the interval starts or nil if it does not have a lower bound.
