@@ -4,14 +4,14 @@ import (
 	"time"
 )
 
-// RepeatingInterval describes an interval with recurring events at every Duration.
+// RepeatingInterval describes an interval with recurring events distributed evenly by a fixed duration.
 // The interval can be bounded by either:
 // a fixed startsAt and endsAt
 // or by a fixed startsAt with a fixed number of Repetitions from which the endsAt will be derived.
 // or by a fixed endsAt with a fixed number of Repetitions from which the startsAt will be derived.
 type RepeatingInterval struct {
 	Interval TimeInterval
-	Duration time.Duration
+	RepeatIn time.Duration
 	Repetitions *uint32
 }
 
@@ -19,7 +19,7 @@ type RepeatingInterval struct {
 // When possible StartsAt will be derived using the Duration and Repetitions fields if Interval.StartsAt is unset.
 func (in RepeatingInterval) StartsAt() *time.Time {
 	if in.isStartsAtBoundedByRepetitions() {
-		startsAt := in.Interval.EndsAt().Add(-time.Duration(*in.Repetitions)  * in.Duration)
+		startsAt := in.Interval.EndsAt().Add(-time.Duration(*in.Repetitions)  * in.RepeatIn)
 		return &startsAt
 	}
 	return in.Interval.StartsAt()
@@ -29,10 +29,21 @@ func (in RepeatingInterval) StartsAt() *time.Time {
 // When possible EndsAt will be derived using the Duration and Repetitions fields if Interval.EndsAt is unset.
 func (in RepeatingInterval) EndsAt() *time.Time {
 	if in.isEndsAtBoundedByRepetitions() {
-		endsAt := in.Interval.StartsAt().Add(time.Duration(*in.Repetitions)  * in.Duration)
+		endsAt := in.Interval.StartsAt().Add(time.Duration(*in.Repetitions)  * in.RepeatIn)
 		return &endsAt
 	}
 	return in.Interval.EndsAt()
+}
+
+// Duration returns the duration the repeating interval will be active for or nil if it is unbounded.
+func (in RepeatingInterval) Duration() *time.Duration {
+	endsAt := in.EndsAt()
+	startsAt := in.StartsAt()
+	if startsAt == nil || endsAt == nil {
+		return nil
+	}
+	d := endsAt.Sub(*startsAt)
+	return &d
 }
 
 // Started returns a boolean indicating if the interval has begun at the given time.
@@ -64,13 +75,13 @@ func (in RepeatingInterval) Next(t time.Time) *time.Time {
 	if !in.Started(t) {
 		return in.StartsAt()
 	}
-	if in.Ended(t) {
+	if in.Ended(t) || in.RepeatIn == 0 {
 		return nil
 	}
 	startsAt := in.StartsAt()
 	diff := t.Sub(*startsAt)
-	mod := diff % in.Duration
-	nxt := t.Add(in.Duration - mod)
+	mod := diff % in.RepeatIn
+	nxt := t.Add(in.RepeatIn - mod)
 	if in.Ended(nxt) {
 		return nil
 	}

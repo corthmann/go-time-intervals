@@ -9,16 +9,39 @@ import "time"
 type Interval struct {
 	startsAt *time.Time
 	endsAt   *time.Time
+	duration *time.Duration
 }
 
 // StartsAt returns the time the interval starts or nil if it does not have a lower bound.
 func (in Interval) StartsAt() *time.Time {
+	if in.startsAt == nil && in.endsAt != nil && in.duration != nil {
+		startsAt := in.endsAt.Add(-*in.duration)
+		return &startsAt
+	}
 	return in.startsAt
 }
 
 // EndsAt returns the time the interval ends or nil if it does not have an upper bound.
 func (in Interval) EndsAt() *time.Time {
+	if in.endsAt == nil && in.startsAt != nil && in.duration != nil {
+		endsAt := in.startsAt.Add(*in.duration)
+		return &endsAt
+	}
 	return in.endsAt
+}
+
+// Duration returns the duration of the interval or nil if it is unbounded.
+func (in Interval) Duration() *time.Duration {
+	if in.duration != nil {
+		return in.duration
+	}
+	endsAt := in.EndsAt()
+	startsAt := in.StartsAt()
+	if startsAt == nil || endsAt == nil {
+		return nil
+	}
+	d := endsAt.Sub(*startsAt)
+	return &d
 }
 
 // Started returns a boolean indicating if the interval has begun at the given time.
