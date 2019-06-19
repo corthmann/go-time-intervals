@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRepeatingInterval_Next(t *testing.T) {
+func TestRepeating_Next(t *testing.T) {
 	duration := 15 * time.Minute
 	startsAt := time.Now().Add(-1*time.Hour)
 	endsAt := time.Now().Add(5*time.Hour)
 	diff := endsAt.Sub(startsAt)
-	in := RepeatingInterval{
+	in := Repeating{
 		Interval: Interval{
 			startsAt: &startsAt,
 			endsAt:   &endsAt,
@@ -35,11 +35,11 @@ func TestRepeatingInterval_Next(t *testing.T) {
 	assert.Nil(t, in.Next(endsAt))
 }
 
-func TestRepeatingInterval_NextWithoutStartsAt(t *testing.T) {
+func TestRepeating_NextWithoutStartsAt(t *testing.T) {
 	duration := 15 * time.Minute
 	repetitions := uint32(5)
 	endsAt := time.Now().Add(5*time.Hour)
-	in := RepeatingInterval{
+	in := Repeating{
 		Interval: Interval{
 			startsAt: nil,
 			endsAt:   &endsAt,
@@ -54,12 +54,12 @@ func TestRepeatingInterval_NextWithoutStartsAt(t *testing.T) {
 	assert.Equal(t, endsAt.Add(-time.Duration(repetitions) * duration), *in.Next(endsAt.Add(-time.Duration(repetitions+1) * duration)))
 }
 
-func TestRepeatingInterval_Started(t *testing.T) {
+func TestRepeating_Started(t *testing.T) {
 	endsAt := time.Now().Add(-1*time.Hour)
 
 	duration := 15 * time.Minute
 	repetitions := uint32(5)
-	in := RepeatingInterval{
+	in := Repeating{
 		Interval: Interval{
 			startsAt: nil,
 			endsAt:   &endsAt,
@@ -75,12 +75,12 @@ func TestRepeatingInterval_Started(t *testing.T) {
 }
 
 
-func TestRepeatingInterval_Ended(t *testing.T) {
+func TestRepeating_Ended(t *testing.T) {
 	startsAt := time.Now().Add(-1*time.Hour)
 
 	duration := 15 * time.Minute
 	repetitions := uint32(5)
-	in := RepeatingInterval{
+	in := Repeating{
 		Interval: Interval{
 			startsAt: &startsAt,
 			endsAt:   nil,
@@ -95,7 +95,7 @@ func TestRepeatingInterval_Ended(t *testing.T) {
 	assert.False(t, in.Ended(startsAt.Add(time.Duration(repetitions+1) * duration)))
 }
 
-func TestRepeatingInterval_ISO8601(t *testing.T) {
+func TestRepeating_ISO8601(t *testing.T) {
 	expectations := []string{
 		"R/2019-01-02T21:00:00Z/2022-01-03T21:00:00Z",
 		"R/2019-01-02T21:00:00Z/P1W",
@@ -111,7 +111,7 @@ func TestRepeatingInterval_ISO8601(t *testing.T) {
 	}
 }
 
-func TestRepeatingInterval_MarshalJSON(t *testing.T) {
+func TestRepeating_MarshalJSON(t *testing.T) {
 	expectations := []string{
 		"R/2019-01-02T21:00:00Z/2022-01-03T21:00:00Z",
 		"R/2019-01-02T21:00:00Z/P1W",
@@ -131,7 +131,7 @@ func TestRepeatingInterval_MarshalJSON(t *testing.T) {
 	}
 }
 
-func TestRepeatingInterval_UnmarshalJSON(t *testing.T) {
+func TestRepeating_UnmarshalJSON(t *testing.T) {
 	expectations := []string{
 		"R/2019-01-02T21:00:00Z/2022-01-03T21:00:00Z",
 		"R/2019-01-02T21:00:00Z/P1W",
@@ -145,7 +145,7 @@ func TestRepeatingInterval_UnmarshalJSON(t *testing.T) {
 		b, err := json.Marshal(expected)
 		assert.Nil(t, err)
 		// Unmarshal and evaluate the result
-		result := RepeatingInterval{}
+		result := Repeating{}
 		err = json.Unmarshal(b, &result)
 		assert.Nil(t, err)
 		assert.Equal(t, expected, &result)

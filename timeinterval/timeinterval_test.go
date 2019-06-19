@@ -35,7 +35,7 @@ func TestParseRepeatingIntervalISO8601(t *testing.T) {
 	duration := 7*24*time.Hour
 	repetitions := uint32(10)
 	diff := endsAt.Sub(startsAt)
-	expectations := map[string]RepeatingInterval{
+	expectations := map[string]Repeating{
 		"R/2019-01-02T21:00:00Z/2022-01-03T21:00:00Z": {
 			Repetitions: nil,
 			RepeatEvery: diff,

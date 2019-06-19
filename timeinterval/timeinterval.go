@@ -96,13 +96,13 @@ func ParseIntervalISO8601(s string) (*Interval, error) {
 }
 
 // ParseRepeatingIntervalISO8601 accepts a string with the ISO8601 "repeating interval" format
-// and returns a RepeatingInterval and an error if parsing of the string failed.
+// and returns a Repeating and an error if parsing of the string failed.
 // See: ref: https://en.wikipedia.org/wiki/ISO_8601#Repeating_intervals
-func ParseRepeatingIntervalISO8601(s string) (*RepeatingInterval, error) {
+func ParseRepeatingIntervalISO8601(s string) (*Repeating, error) {
 	if !strings.HasPrefix(s, "R") {
 		return nil, errors.New("invalid repeating interval format")
 	}
-	ri := RepeatingInterval{}
+	ri := Repeating{}
 	// Split the "Repetition" and "Interval" parts of the string.
 	parts := strings.SplitN(s, "/", 2)
 	repetitionString := parts[0]
