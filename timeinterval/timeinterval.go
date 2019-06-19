@@ -15,8 +15,10 @@ type formatType uint8
 
 // TypeUnknown indicates that the given string has a format that is unknown and unsupported.
 const TypeUnknown formatType = 0
+
 // TypeTime indicates that the given string is an ISO8601 time string
 const TypeTime formatType = 1
+
 // TypeDuration indicates that the given string is am ISO8601 duration string
 const TypeDuration formatType = 2
 
@@ -36,7 +38,7 @@ func ParseIntervalISO8601(s string) (*Interval, error) {
 	if err != nil {
 		return nil, err
 	}
-	if partTypes[0] == TypeDuration &&  partTypes[1] == TypeDuration {
+	if partTypes[0] == TypeDuration && partTypes[1] == TypeDuration {
 		return nil, errors.New("interval cannot consist of two durations")
 	}
 
@@ -169,11 +171,11 @@ func durationToISO8601(d time.Duration) (string, error) {
 	iso := "P"
 	if durationLeft >= durationWeek {
 		iso += fmt.Sprintf("%dW", durationLeft/durationWeek)
-		durationLeft -= (durationLeft/durationWeek) * durationWeek
+		durationLeft -= (durationLeft / durationWeek) * durationWeek
 	}
 	if durationLeft >= durationDay {
 		iso += fmt.Sprintf("%dD", durationLeft/durationDay)
-		durationLeft -= (durationLeft/durationDay) * durationDay
+		durationLeft -= (durationLeft / durationDay) * durationDay
 	}
 	if durationLeft != 0 {
 		return iso, errors.New("duration could not be represented with the supported duration types")

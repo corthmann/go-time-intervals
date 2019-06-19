@@ -45,7 +45,7 @@ func (in Repeating) MarshalJSON() ([]byte, error) {
 // When possible StartsAt will be derived using the Duration and Repetitions fields if Interval.StartsAt is unset.
 func (in Repeating) StartsAt() *time.Time {
 	if in.isStartsAtBoundedByRepetitions() {
-		startsAt := in.Interval.EndsAt().Add(-time.Duration(*in.Repetitions)  * in.RepeatEvery)
+		startsAt := in.Interval.EndsAt().Add(-time.Duration(*in.Repetitions) * in.RepeatEvery)
 		return &startsAt
 	}
 	return in.Interval.StartsAt()
@@ -55,7 +55,7 @@ func (in Repeating) StartsAt() *time.Time {
 // When possible EndsAt will be derived using the Duration and Repetitions fields if Interval.EndsAt is unset.
 func (in Repeating) EndsAt() *time.Time {
 	if in.isEndsAtBoundedByRepetitions() {
-		endsAt := in.Interval.StartsAt().Add(time.Duration(*in.Repetitions)  * in.RepeatEvery)
+		endsAt := in.Interval.StartsAt().Add(time.Duration(*in.Repetitions) * in.RepeatEvery)
 		return &endsAt
 	}
 	return in.Interval.EndsAt()
@@ -113,7 +113,6 @@ func (in Repeating) Next(t time.Time) *time.Time {
 	}
 	return &nxt
 }
-
 
 // ISO8691 returns the repeating interval formatted as an ISO8601 repeating interval string.
 // An error is returned if formatting fails.

@@ -10,13 +10,13 @@ import (
 )
 
 func TestInterval_Started(t *testing.T) {
-	startsAt := time.Now().Add(-1*time.Hour)
-	endsAt := time.Now().Add(5*time.Hour)
+	startsAt := time.Now().Add(-1 * time.Hour)
+	endsAt := time.Now().Add(5 * time.Hour)
 	in := Interval{startsAt: &startsAt, endsAt: &endsAt}
 	expectations := map[time.Time]bool{
-		startsAt: true,
-		startsAt.Add(-1* time.Hour): false,
-		endsAt: true,
+		startsAt:                     true,
+		startsAt.Add(-1 * time.Hour): false,
+		endsAt:                       true,
 	}
 	for given, expected := range expectations {
 		assert.Equal(t, expected, in.Started(given))
@@ -25,14 +25,14 @@ func TestInterval_Started(t *testing.T) {
 }
 
 func TestInterval_Ended(t *testing.T) {
-	startsAt := time.Now().Add(-1*time.Hour)
-	endsAt := time.Now().Add(5*time.Hour)
+	startsAt := time.Now().Add(-1 * time.Hour)
+	endsAt := time.Now().Add(5 * time.Hour)
 	in := Interval{startsAt: &startsAt, endsAt: &endsAt}
 	expectations := map[time.Time]bool{
-		startsAt: false,
-		startsAt.Add(-1* time.Hour): false,
-		endsAt: false,
-		endsAt.Add(1*time.Hour): true,
+		startsAt:                     false,
+		startsAt.Add(-1 * time.Hour): false,
+		endsAt:                       false,
+		endsAt.Add(1 * time.Hour):    true,
 	}
 	for given, expected := range expectations {
 		assert.Equal(t, expected, in.Ended(given))
@@ -41,15 +41,15 @@ func TestInterval_Ended(t *testing.T) {
 }
 
 func TestInterval_In(t *testing.T) {
-	startsAt := time.Now().Add(-1*time.Hour)
-	endsAt := time.Now().Add(5*time.Hour)
+	startsAt := time.Now().Add(-1 * time.Hour)
+	endsAt := time.Now().Add(5 * time.Hour)
 	in := Interval{startsAt: &startsAt, endsAt: &endsAt}
 	expectations := map[time.Time]bool{
-		startsAt.Add(-1* time.Hour): false,
-		startsAt: true,
-		startsAt.Add(1*time.Hour): true,
-		endsAt: true,
-		endsAt.Add(1*time.Hour): false,
+		startsAt.Add(-1 * time.Hour): false,
+		startsAt:                     true,
+		startsAt.Add(1 * time.Hour):  true,
+		endsAt:                       true,
+		endsAt.Add(1 * time.Hour):    false,
 	}
 	for given, expected := range expectations {
 		assert.Equal(t, expected, in.In(given))
