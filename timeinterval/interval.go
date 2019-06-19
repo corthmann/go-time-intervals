@@ -31,7 +31,7 @@ func (in *Interval) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalJSON marshal Interval into an ISO8601 "interval" string.
+// MarshalJSON marshals Interval into an ISO8601 "interval" string.
 func (in Interval) MarshalJSON() ([]byte, error) {
 	s, err := in.ISO8601()
 	if err != nil {
