@@ -13,14 +13,14 @@ var regexTimeStringISO = regexp.MustCompile("^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-
 
 type formatType uint8
 
-// TypeUnknown indicates that the given string has a format that is unknown and unsupported.
-const TypeUnknown formatType = 0
+// typeUnknown indicates that the given string has a format that is unknown and unsupported.
+const typeUnknown formatType = 0
 
-// TypeTime indicates that the given string is an ISO8601 time string
-const TypeTime formatType = 1
+// typeTime indicates that the given string is an ISO8601 time string
+const typeTime formatType = 1
 
-// TypeDuration indicates that the given string is am ISO8601 duration string
-const TypeDuration formatType = 2
+// typeDuration indicates that the given string is am ISO8601 duration string
+const typeDuration formatType = 2
 
 const durationWeek = 7 * 24 * time.Hour
 const durationDay = 24 * time.Hour
@@ -38,20 +38,20 @@ func ParseIntervalISO8601(s string) (*Interval, error) {
 	if err != nil {
 		return nil, err
 	}
-	if partTypes[0] == TypeDuration && partTypes[1] == TypeDuration {
+	if partTypes[0] == typeDuration && partTypes[1] == typeDuration {
 		return nil, errors.New("interval cannot consist of two durations")
 	}
 
 	in := Interval{}
 	for i := 0; i < len(partTypes); i++ {
 		switch partTypes[i] {
-		case TypeDuration:
+		case typeDuration:
 			d, err := parseDurationString(parts[i])
 			if err != nil {
 				return nil, err
 			}
 			in.duration = &d
-		case TypeTime:
+		case typeTime:
 			t, err := parseTimeString(parts[i])
 			if err != nil {
 				return nil, err
@@ -108,7 +108,7 @@ func identifyIntervalTypes(parts []string) ([]formatType, error) {
 		if err != nil {
 			return nil, err
 		}
-		if ft == TypeUnknown {
+		if ft == typeUnknown {
 			return types, errors.New("invalid interval format")
 		}
 		types[i] = ft
@@ -118,12 +118,12 @@ func identifyIntervalTypes(parts []string) ([]formatType, error) {
 
 func identifyType(s string) (formatType, error) {
 	if regexTimeStringISO.MatchString(s) {
-		return TypeTime, nil
+		return typeTime, nil
 	}
 	if strings.HasPrefix(s, "P") {
-		return TypeDuration, nil
+		return typeDuration, nil
 	}
-	return TypeUnknown, errors.New("invalid/unknown format")
+	return typeUnknown, errors.New("invalid/unknown format")
 }
 
 func parseTimeString(s string) (time.Time, error) {
