@@ -37,24 +37,24 @@ func TestParseRepeatingIntervalISO8601(t *testing.T) {
 	diff := endsAt.Sub(startsAt)
 	expectations := map[string]RepeatingInterval{
 		"R/2019-01-02T21:00:00Z/2022-01-03T21:00:00Z": {
-			Repetitions:nil,
-			RepeatIn:diff,
-			Interval: Interval{ startsAt: &startsAt, endsAt: &endsAt, duration: nil},
+			Repetitions: nil,
+			RepeatEvery: diff,
+			Interval:    Interval{ startsAt: &startsAt, endsAt: &endsAt, duration: nil},
 		}, // Time - Time
 		"R/2019-01-02T21:00:00Z/P1W": {
-			Repetitions:nil,
-			RepeatIn:duration,
-			Interval: Interval{ startsAt: &startsAt, endsAt: nil, duration: &duration},
+			Repetitions: nil,
+			RepeatEvery: duration,
+			Interval:    Interval{ startsAt: &startsAt, endsAt: nil, duration: &duration},
 		}, // Time - Duration
 		"R/P1W/2022-01-03T21:00:00Z": {
-			Repetitions:nil,
-			RepeatIn:duration,
-			Interval: Interval{ startsAt: nil, endsAt: &endsAt, duration: &duration},
+			Repetitions: nil,
+			RepeatEvery: duration,
+			Interval:    Interval{ startsAt: nil, endsAt: &endsAt, duration: &duration},
 		}, // Duration - Time
 		"R10/P1W/2022-01-03T21:00:00Z": {
-			Repetitions:&repetitions,
-			RepeatIn:duration,
-			Interval: Interval{ startsAt: nil, endsAt: &endsAt, duration: &duration},
+			Repetitions: &repetitions,
+			RepeatEvery: duration,
+			Interval:    Interval{ startsAt: nil, endsAt: &endsAt, duration: &duration},
 		}, // Duration - Time
 	}
 	for given, expected := range expectations {

@@ -125,7 +125,7 @@ func ParseRepeatingIntervalISO8601(s string) (*RepeatingInterval, error) {
 	// Set "Duration"
 	d := ri.Interval.Duration()
 	if d != nil {
-		ri.RepeatIn = *d
+		ri.RepeatEvery = *d
 	}
 	return &ri, nil
 }

@@ -12,8 +12,8 @@ import (
 // or by a fixed startsAt with a fixed number of Repetitions from which the endsAt will be derived.
 // or by a fixed endsAt with a fixed number of Repetitions from which the startsAt will be derived.
 type RepeatingInterval struct {
-	Interval Interval
-	RepeatIn time.Duration
+	Interval    Interval
+	RepeatEvery time.Duration
 	Repetitions *uint32
 }
 
@@ -45,7 +45,7 @@ func (in RepeatingInterval) MarshalJSON() ([]byte, error) {
 // When possible StartsAt will be derived using the Duration and Repetitions fields if Interval.StartsAt is unset.
 func (in RepeatingInterval) StartsAt() *time.Time {
 	if in.isStartsAtBoundedByRepetitions() {
-		startsAt := in.Interval.EndsAt().Add(-time.Duration(*in.Repetitions)  * in.RepeatIn)
+		startsAt := in.Interval.EndsAt().Add(-time.Duration(*in.Repetitions)  * in.RepeatEvery)
 		return &startsAt
 	}
 	return in.Interval.StartsAt()
@@ -55,7 +55,7 @@ func (in RepeatingInterval) StartsAt() *time.Time {
 // When possible EndsAt will be derived using the Duration and Repetitions fields if Interval.EndsAt is unset.
 func (in RepeatingInterval) EndsAt() *time.Time {
 	if in.isEndsAtBoundedByRepetitions() {
-		endsAt := in.Interval.StartsAt().Add(time.Duration(*in.Repetitions)  * in.RepeatIn)
+		endsAt := in.Interval.StartsAt().Add(time.Duration(*in.Repetitions)  * in.RepeatEvery)
 		return &endsAt
 	}
 	return in.Interval.EndsAt()
@@ -101,13 +101,13 @@ func (in RepeatingInterval) Next(t time.Time) *time.Time {
 	if !in.Started(t) {
 		return in.StartsAt()
 	}
-	if in.Ended(t) || in.RepeatIn == 0 {
+	if in.Ended(t) || in.RepeatEvery == 0 {
 		return nil
 	}
 	startsAt := in.StartsAt()
 	diff := t.Sub(*startsAt)
-	mod := diff % in.RepeatIn
-	nxt := t.Add(in.RepeatIn - mod)
+	mod := diff % in.RepeatEvery
+	nxt := t.Add(in.RepeatEvery - mod)
 	if in.Ended(nxt) {
 		return nil
 	}
@@ -123,7 +123,7 @@ func (in RepeatingInterval) ISO8601() (string, error) {
 	var startString string
 	var endString string
 	if in.Interval.StartsAtDerivedFromDuration() {
-		d := in.RepeatIn
+		d := in.RepeatEvery
 		s, err := durationToISO8601(d)
 		startString = s
 		if err != nil {
@@ -133,7 +133,7 @@ func (in RepeatingInterval) ISO8601() (string, error) {
 		endString = s
 
 	} else if in.Interval.EndsAtDerivedFromDuration() {
-		d := in.RepeatIn
+		d := in.RepeatEvery
 		s, err := durationToISO8601(d)
 		endString = s
 		if err != nil {

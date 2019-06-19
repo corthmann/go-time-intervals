@@ -19,7 +19,7 @@ func TestRepeatingInterval_Next(t *testing.T) {
 			startsAt: &startsAt,
 			endsAt:   &endsAt,
 		},
-		RepeatIn: duration,
+		RepeatEvery: duration,
 	}
 	expectations := map[time.Time]time.Time{
 		startsAt.Add(-5*time.Hour): startsAt,
@@ -44,7 +44,7 @@ func TestRepeatingInterval_NextWithoutStartsAt(t *testing.T) {
 			startsAt: nil,
 			endsAt:   &endsAt,
 		},
-		RepeatIn: duration,
+		RepeatEvery: duration,
 		Repetitions: &repetitions,
 	}
 
@@ -64,7 +64,7 @@ func TestRepeatingInterval_Started(t *testing.T) {
 			startsAt: nil,
 			endsAt:   &endsAt,
 		},
-		RepeatIn:duration,
+		RepeatEvery: duration,
 		Repetitions: &repetitions}
 
 
@@ -85,7 +85,7 @@ func TestRepeatingInterval_Ended(t *testing.T) {
 			startsAt: &startsAt,
 			endsAt:   nil,
 		},
-		RepeatIn:duration,
+		RepeatEvery: duration,
 		Repetitions: &repetitions}
 
 
