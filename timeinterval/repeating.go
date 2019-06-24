@@ -44,7 +44,11 @@ func (in *Repeating) UnmarshalJSON(data []byte) error {
 
 // MarshalJSON marshal Repeating into an ISO8601 "repeating interval" string.
 func (in Repeating) MarshalJSON() ([]byte, error) {
-	return json.Marshal(in.ISO8601())
+	iso, err := in.ISO8601()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(iso)
 }
 
 // StartsAt returns the time the interval begins.
@@ -123,10 +127,13 @@ func (in Repeating) Next(t time.Time) *time.Time {
 }
 
 // ISO8691 returns the repeating interval formatted as an ISO8601 repeating interval string.
-func (in Repeating) ISO8601() string {
-	iso := in.Interval.ISO8601()
-	if in.Repetitions != nil {
-		return fmt.Sprintf("R%d/%s", *in.Repetitions, iso)
+func (in Repeating) ISO8601() (string, error) {
+	iso, err := in.Interval.ISO8601()
+	if err != nil {
+		return "", err
 	}
-	return fmt.Sprintf("R/%s", iso)
+	if in.Repetitions != nil {
+		return fmt.Sprintf("R%d/%s", *in.Repetitions, iso), nil
+	}
+	return fmt.Sprintf("R/%s", iso), nil
 }

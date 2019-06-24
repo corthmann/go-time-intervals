@@ -13,7 +13,7 @@ func TestRepeating_StartsAt(t *testing.T) {
 	duration := 15 * time.Minute
 	repetitions := uint32(8)
 	endsAt := time.Now().Add(1 * time.Hour)
-	i, err := NewInterval(nil, &endsAt, &duration, nil)
+	i, err := NewInterval(nil, &endsAt, &duration)
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval:    *i,
@@ -28,7 +28,7 @@ func TestRepeating_EndsAt(t *testing.T) {
 	duration := 15 * time.Minute
 	repetitions := uint32(8)
 	startsAt := time.Now().Add(-1 * time.Hour)
-	i, err := NewInterval(&startsAt, nil, &duration, nil)
+	i, err := NewInterval(&startsAt, nil, &duration)
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval:    *i,
@@ -45,7 +45,7 @@ func TestRepeating_Next(t *testing.T) {
 	duration := endsAt.Sub(startsAt)
 	repetitions := uint32(3)
 	diff := endsAt.Sub(startsAt)
-	i, err := NewInterval(&startsAt, &endsAt, nil, nil)
+	i, err := NewInterval(&startsAt, &endsAt, nil)
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval:    *i,
@@ -69,7 +69,7 @@ func TestRepeating_NextUnbounded(t *testing.T) {
 	startsAt := time.Now().Add(-1 * time.Hour)
 	endsAt := time.Now().Add(5 * time.Hour)
 	duration := endsAt.Sub(startsAt)
-	i, err := NewInterval(&startsAt, &endsAt, nil, nil)
+	i, err := NewInterval(&startsAt, &endsAt, nil)
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval: *i,
@@ -85,7 +85,7 @@ func TestRepeating_Started(t *testing.T) {
 
 	duration := 15 * time.Minute
 	repetitions := uint32(5)
-	i, err := NewInterval(nil, &endsAt, &duration, nil)
+	i, err := NewInterval(nil, &endsAt, &duration)
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval:    *i,
@@ -102,7 +102,7 @@ func TestRepeating_Ended(t *testing.T) {
 
 	duration := 15 * time.Minute
 	repetitions := uint32(5)
-	i, err := NewInterval(&startsAt, nil, &duration, nil)
+	i, err := NewInterval(&startsAt, nil, &duration)
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval:    *i,
@@ -124,7 +124,9 @@ func TestRepeating_ISO8601(t *testing.T) {
 	for _, expectation := range expectations {
 		in, err := ParseRepeatingIntervalISO8601(expectation)
 		assert.Nil(t, err)
-		assert.Equal(t, expectation, in.ISO8601())
+		iso, err := in.ISO8601()
+		assert.Nil(t, err)
+		assert.Equal(t, expectation, iso)
 	}
 }
 

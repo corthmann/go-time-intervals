@@ -2,6 +2,7 @@ package timeinterval
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -62,7 +63,7 @@ func ParseIntervalISO8601(s string) (*Interval, error) {
 			}
 		}
 	}
-	return NewInterval(startsAt, endsAt, duration, &s)
+	return NewInterval(startsAt, endsAt, duration)
 }
 
 // ParseRepeatingIntervalISO8601 accepts a string with the ISO8601 "repeating interval" format
@@ -158,4 +159,21 @@ func parseDurationString(s string) (time.Duration, error) {
 		}
 	}
 	return d, nil
+}
+
+func durationToISO8601(d time.Duration) (string, error) {
+	durationLeft := d
+	iso := "P"
+	if durationLeft >= durationWeek {
+		iso += fmt.Sprintf("%dW", durationLeft/durationWeek)
+		durationLeft -= (durationLeft / durationWeek) * durationWeek
+	}
+	if durationLeft >= durationDay {
+		iso += fmt.Sprintf("%dD", durationLeft/durationDay)
+		durationLeft -= (durationLeft / durationDay) * durationDay
+	}
+	if durationLeft != 0 {
+		return iso, errors.New("duration could not be represented with the supported duration types")
+	}
+	return iso, nil
 }

@@ -12,7 +12,7 @@ import (
 func TestInterval_Started(t *testing.T) {
 	startsAt := time.Now().Add(-1 * time.Hour)
 	endsAt := time.Now().Add(5 * time.Hour)
-	in, err := NewInterval(&startsAt, &endsAt, nil, nil)
+	in, err := NewInterval(&startsAt, &endsAt, nil)
 	assert.Nil(t, err)
 	expectations := map[time.Time]bool{
 		startsAt:                     true,
@@ -27,7 +27,7 @@ func TestInterval_Started(t *testing.T) {
 func TestInterval_Ended(t *testing.T) {
 	startsAt := time.Now().Add(-1 * time.Hour)
 	endsAt := time.Now().Add(5 * time.Hour)
-	in, err := NewInterval(&startsAt, &endsAt, nil, nil)
+	in, err := NewInterval(&startsAt, &endsAt, nil)
 	assert.Nil(t, err)
 	expectations := map[time.Time]bool{
 		startsAt:                     false,
@@ -43,7 +43,7 @@ func TestInterval_Ended(t *testing.T) {
 func TestInterval_In(t *testing.T) {
 	startsAt := time.Now().Add(-1 * time.Hour)
 	endsAt := time.Now().Add(5 * time.Hour)
-	in, err := NewInterval(&startsAt, &endsAt, nil, nil)
+	in, err := NewInterval(&startsAt, &endsAt, nil)
 	assert.Nil(t, err)
 	expectations := map[time.Time]bool{
 		startsAt.Add(-1 * time.Hour): false,
@@ -66,7 +66,8 @@ func TestInterval_ISO8601(t *testing.T) {
 	for _, expectation := range expectations {
 		in, err := ParseIntervalISO8601(expectation)
 		assert.Nil(t, err)
-		result := in.ISO8601()
+		result, err := in.ISO8601()
+		assert.Nil(t, err)
 		assert.Equal(t, expectation, result)
 	}
 }

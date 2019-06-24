@@ -13,7 +13,7 @@ func ExampleInterval() {
 	startsAt := now.Add(-1 * time.Hour)
 	endsAt := now.Add(5 * time.Hour)
 
-	in, err := timeinterval.NewInterval(&startsAt, &endsAt, nil, nil)
+	in, err := timeinterval.NewInterval(&startsAt, &endsAt, nil)
 	fmt.Println(err)
 	fmt.Println(in.StartsAt.Format(time.RFC3339))
 	fmt.Println(in.EndsAt.Format(time.RFC3339))
@@ -45,7 +45,7 @@ func ExampleRepeating() {
 	duration := 15 * time.Minute
 	repetitions := uint32(5)
 
-	i, err := timeinterval.NewInterval(&startsAt, nil, &duration, nil)
+	i, err := timeinterval.NewInterval(&startsAt, nil, &duration)
 	fmt.Println(err)
 	in := timeinterval.Repeating{
 		Interval:    *i,
