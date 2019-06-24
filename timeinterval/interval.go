@@ -62,6 +62,11 @@ func (in *Interval) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// String returns a string that describes of the interval.
+func (in Interval) String() string {
+	return fmt.Sprintf("%v -> %v", in.StartsAt, in.EndsAt)
+}
+
 // MarshalJSON marshals Interval into an ISO8601 "interval" string.
 func (in Interval) MarshalJSON() ([]byte, error) {
 	iso := in.iso8601

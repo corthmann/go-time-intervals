@@ -92,9 +92,6 @@ func ParseRepeatingIntervalISO8601(s string) (*Repeating, error) {
 		return nil, err
 	}
 	ri.Interval = *in
-	// Set "Duration"
-	d := ri.Interval.Duration()
-	ri.RepeatEvery = d
 	return &ri, nil
 }
 

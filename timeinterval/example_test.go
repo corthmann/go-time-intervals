@@ -49,7 +49,6 @@ func ExampleRepeating() {
 	fmt.Println(err)
 	in := timeinterval.Repeating{
 		Interval:    *i,
-		RepeatEvery: duration,
 		Repetitions: &repetitions}
 
 	fmt.Println(in.StartsAt().Format(time.RFC3339))

@@ -33,26 +33,21 @@ func TestParseRepeatingIntervalISO8601(t *testing.T) {
 	assert.Nil(t, err)
 	duration := 7 * 24 * time.Hour
 	repetitions := uint32(10)
-	diff := endsAt.Sub(startsAt)
 	expectations := map[string]Repeating{
 		"R/2019-01-02T21:00:00Z/2022-01-03T21:00:00Z": {
 			Repetitions: nil,
-			RepeatEvery: diff,
 			Interval:    Interval{StartsAt: startsAt, EndsAt: endsAt, iso8601: "2019-01-02T21:00:00Z/2022-01-03T21:00:00Z"},
 		}, // Time - Time
 		"R/2019-01-02T21:00:00Z/P1W": {
 			Repetitions: nil,
-			RepeatEvery: duration,
 			Interval:    Interval{StartsAt: startsAt, EndsAt: startsAt.Add(duration), iso8601: "2019-01-02T21:00:00Z/P1W"},
 		}, // Time - Duration
 		"R/P1W/2022-01-03T21:00:00Z": {
 			Repetitions: nil,
-			RepeatEvery: duration,
 			Interval:    Interval{StartsAt: endsAt.Add(-duration), EndsAt: endsAt, iso8601: "P1W/2022-01-03T21:00:00Z"},
 		}, // Duration - Time
 		"R10/P1W/2022-01-03T21:00:00Z": {
 			Repetitions: &repetitions,
-			RepeatEvery: duration,
 			Interval:    Interval{StartsAt: endsAt.Add(-duration), EndsAt: endsAt, iso8601: "P1W/2022-01-03T21:00:00Z"},
 		}, // Duration - Time
 	}

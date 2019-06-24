@@ -17,7 +17,6 @@ func TestRepeating_StartsAt(t *testing.T) {
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval:    *i,
-		RepeatEvery: duration,
 		Repetitions: &repetitions,
 	}
 	result := in.StartsAt()
@@ -33,7 +32,6 @@ func TestRepeating_EndsAt(t *testing.T) {
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval:    *i,
-		RepeatEvery: duration,
 		Repetitions: &repetitions,
 	}
 	result := in.EndsAt()
@@ -51,7 +49,6 @@ func TestRepeating_Next(t *testing.T) {
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval:    *i,
-		RepeatEvery: duration,
 		Repetitions: &repetitions,
 	}
 	expectations := map[time.Time]time.Time{
@@ -75,8 +72,7 @@ func TestRepeating_NextUnbounded(t *testing.T) {
 	i, err := NewInterval(&startsAt, &endsAt, nil, nil)
 	assert.Nil(t, err)
 	in := Repeating{
-		Interval:    *i,
-		RepeatEvery: duration,
+		Interval: *i,
 	}
 	assert.Equal(t, startsAt.Add(duration), *in.Next(startsAt))
 	assert.Equal(t, startsAt, *in.Next(startsAt.Add(-duration)))
@@ -93,7 +89,6 @@ func TestRepeating_Started(t *testing.T) {
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval:    *i,
-		RepeatEvery: duration,
 		Repetitions: &repetitions}
 
 	assert.False(t, in.Started(i.EndsAt.Add(-time.Duration(repetitions+1)*duration)))
@@ -111,7 +106,6 @@ func TestRepeating_Ended(t *testing.T) {
 	assert.Nil(t, err)
 	in := Repeating{
 		Interval:    *i,
-		RepeatEvery: duration,
 		Repetitions: &repetitions}
 
 	assert.True(t, in.Ended(startsAt.Add(time.Duration(repetitions+1)*duration)))

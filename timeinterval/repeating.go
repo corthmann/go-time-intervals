@@ -11,8 +11,20 @@ import (
 // When Repetitions is unset, then the repeating interval will be unbounded and recur infinitely long into the future.
 type Repeating struct {
 	Interval    Interval
-	RepeatEvery time.Duration
 	Repetitions *uint32
+}
+
+// String returns a string that describes the repeating interval.
+func (r Repeating) String() string {
+	if r.Repetitions != nil {
+		return fmt.Sprintf("%v, reps: %v, times: %v", r.Interval, r.RepeatEvery(), *r.Repetitions)
+	}
+	return fmt.Sprintf("%v, reps: %v", r.Interval, r.RepeatEvery())
+}
+
+// RepeatEvery returns duration of each repetition. This is identical to the duration of the interval.
+func (r Repeating) RepeatEvery() time.Duration {
+	return r.Interval.Duration()
 }
 
 // UnmarshalJSON unmarshal Repeating from an ISO8601 "repeating interval" string.
@@ -52,7 +64,7 @@ func (in Repeating) EndsAt() *time.Time {
 	if in.Repetitions == nil {
 		return nil
 	}
-	endsAt := in.Interval.StartsAt.Add(time.Duration(*in.Repetitions) * in.RepeatEvery)
+	endsAt := in.Interval.StartsAt.Add(time.Duration(*in.Repetitions) * in.RepeatEvery())
 	return &endsAt
 }
 
@@ -98,12 +110,12 @@ func (in Repeating) Next(t time.Time) *time.Time {
 	if !in.Started(t) {
 		return in.StartsAt()
 	}
-	if in.Ended(t) || in.RepeatEvery == 0 {
+	if in.Ended(t) || in.RepeatEvery() == 0 {
 		return nil
 	}
 	diff := t.Sub(in.Interval.StartsAt)
-	mod := diff % in.RepeatEvery
-	nxt := t.Add(in.RepeatEvery - mod)
+	mod := diff % in.RepeatEvery()
+	nxt := t.Add(in.RepeatEvery() - mod)
 	if in.Ended(nxt) {
 		return nil
 	}
