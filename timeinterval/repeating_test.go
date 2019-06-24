@@ -9,17 +9,50 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRepeating_Next(t *testing.T) {
+func TestRepeating_StartsAt(t *testing.T) {
 	duration := 15 * time.Minute
+	repetitions := uint32(8)
+	endsAt := time.Now().Add(1 * time.Hour)
+	i, err := NewInterval(nil, &endsAt, &duration, nil)
+	assert.Nil(t, err)
+	in := Repeating{
+		Interval:    *i,
+		RepeatEvery: duration,
+		Repetitions: &repetitions,
+	}
+	result := in.StartsAt()
+	assert.NotNil(t, result)
+	assert.Equal(t, endsAt.Add(-duration).Format(time.RFC3339), result.Format(time.RFC3339))
+}
+
+func TestRepeating_EndsAt(t *testing.T) {
+	duration := 15 * time.Minute
+	repetitions := uint32(8)
+	startsAt := time.Now().Add(-1 * time.Hour)
+	i, err := NewInterval(&startsAt, nil, &duration, nil)
+	assert.Nil(t, err)
+	in := Repeating{
+		Interval:    *i,
+		RepeatEvery: duration,
+		Repetitions: &repetitions,
+	}
+	result := in.EndsAt()
+	assert.NotNil(t, result)
+	assert.Equal(t, startsAt.Add(2*time.Hour).Format(time.RFC3339), result.Format(time.RFC3339))
+}
+
+func TestRepeating_Next(t *testing.T) {
 	startsAt := time.Now().Add(-1 * time.Hour)
 	endsAt := time.Now().Add(5 * time.Hour)
+	duration := endsAt.Sub(startsAt)
+	repetitions := uint32(3)
 	diff := endsAt.Sub(startsAt)
+	i, err := NewInterval(&startsAt, &endsAt, nil, nil)
+	assert.Nil(t, err)
 	in := Repeating{
-		Interval: Interval{
-			startsAt: &startsAt,
-			endsAt:   &endsAt,
-		},
+		Interval:    *i,
 		RepeatEvery: duration,
+		Repetitions: &repetitions,
 	}
 	expectations := map[time.Time]time.Time{
 		startsAt.Add(-5 * time.Hour):           startsAt,
@@ -32,26 +65,23 @@ func TestRepeating_Next(t *testing.T) {
 		result := in.Next(given)
 		assert.True(t, expected.Equal(*result))
 	}
-	assert.Nil(t, in.Next(endsAt))
+	assert.Nil(t, in.Next(startsAt.Add(time.Duration(repetitions)*duration)))
 }
 
-func TestRepeating_NextWithoutStartsAt(t *testing.T) {
-	duration := 15 * time.Minute
-	repetitions := uint32(5)
+func TestRepeating_NextUnbounded(t *testing.T) {
+	startsAt := time.Now().Add(-1 * time.Hour)
 	endsAt := time.Now().Add(5 * time.Hour)
+	duration := endsAt.Sub(startsAt)
+	i, err := NewInterval(&startsAt, &endsAt, nil, nil)
+	assert.Nil(t, err)
 	in := Repeating{
-		Interval: Interval{
-			startsAt: nil,
-			endsAt:   &endsAt,
-		},
+		Interval:    *i,
 		RepeatEvery: duration,
-		Repetitions: &repetitions,
 	}
-
-	assert.Nil(t, in.Next(endsAt))
-	assert.Equal(t, &endsAt, in.Next(endsAt.Add(-duration)))
-	assert.Equal(t, endsAt.Add(-time.Duration(repetitions-1)*duration), *in.Next(endsAt.Add(-time.Duration(repetitions) * duration)))
-	assert.Equal(t, endsAt.Add(-time.Duration(repetitions)*duration), *in.Next(endsAt.Add(-time.Duration(repetitions+1) * duration)))
+	assert.Equal(t, startsAt.Add(duration), *in.Next(startsAt))
+	assert.Equal(t, startsAt, *in.Next(startsAt.Add(-duration)))
+	assert.Equal(t, startsAt.Add(-duration), *in.Next(startsAt.Add(-2 * duration)))
+	assert.Equal(t, endsAt.Add(duration), *in.Next(endsAt))
 }
 
 func TestRepeating_Started(t *testing.T) {
@@ -59,16 +89,15 @@ func TestRepeating_Started(t *testing.T) {
 
 	duration := 15 * time.Minute
 	repetitions := uint32(5)
+	i, err := NewInterval(nil, &endsAt, &duration, nil)
+	assert.Nil(t, err)
 	in := Repeating{
-		Interval: Interval{
-			startsAt: nil,
-			endsAt:   &endsAt,
-		},
+		Interval:    *i,
 		RepeatEvery: duration,
 		Repetitions: &repetitions}
 
-	assert.False(t, in.Started(endsAt.Add(-time.Duration(repetitions+1)*duration)))
-	assert.True(t, in.Started(endsAt.Add(-time.Duration(repetitions)*duration)))
+	assert.False(t, in.Started(i.EndsAt.Add(-time.Duration(repetitions+1)*duration)))
+	assert.True(t, in.Started(i.StartsAt))
 	in.Repetitions = nil
 	assert.True(t, in.Started(endsAt.Add(-time.Duration(repetitions+1)*duration)))
 }
@@ -78,11 +107,10 @@ func TestRepeating_Ended(t *testing.T) {
 
 	duration := 15 * time.Minute
 	repetitions := uint32(5)
+	i, err := NewInterval(&startsAt, nil, &duration, nil)
+	assert.Nil(t, err)
 	in := Repeating{
-		Interval: Interval{
-			startsAt: &startsAt,
-			endsAt:   nil,
-		},
+		Interval:    *i,
 		RepeatEvery: duration,
 		Repetitions: &repetitions}
 
@@ -102,9 +130,7 @@ func TestRepeating_ISO8601(t *testing.T) {
 	for _, expectation := range expectations {
 		in, err := ParseRepeatingIntervalISO8601(expectation)
 		assert.Nil(t, err)
-		result, err := in.ISO8601()
-		assert.Nil(t, err)
-		assert.Equal(t, expectation, result)
+		assert.Equal(t, expectation, in.ISO8601())
 	}
 }
 

@@ -14,16 +14,15 @@ func TestParseISO8601(t *testing.T) {
 	assert.Nil(t, err)
 	duration := 7 * 24 * time.Hour
 	expectations := map[string]Interval{
-		"2019-01-02T21:00:00Z/2022-01-03T21:00:00Z": {startsAt: &startsAt, endsAt: &endsAt},                  // Time - Time
-		"2019-01-02T21:00:00Z/P1W":                  {startsAt: &startsAt, endsAt: nil, duration: &duration}, // Time - Duration
-		"P1W/2022-01-03T21:00:00Z":                  {startsAt: nil, duration: &duration, endsAt: &endsAt},   // Duration - Time
+		"2019-01-02T21:00:00Z/2022-01-03T21:00:00Z": {StartsAt: startsAt, EndsAt: endsAt, iso8601: "2019-01-02T21:00:00Z/2022-01-03T21:00:00Z"}, // Time - Time
+		"2019-01-02T21:00:00Z/P1W":                  {StartsAt: startsAt, EndsAt: startsAt.Add(duration), iso8601: "2019-01-02T21:00:00Z/P1W"},  // Time - Duration
+		"P1W/2022-01-03T21:00:00Z":                  {StartsAt: endsAt.Add(-duration), EndsAt: endsAt, iso8601: "P1W/2022-01-03T21:00:00Z"},     // Duration - Time
 	}
 	for given, expected := range expectations {
 		result, err := ParseIntervalISO8601(given)
 		assert.Nil(t, err)
 		assert.Equal(t, &expected, result)
-		assert.NotNil(t, result.StartsAt())
-		assert.NotNil(t, result.EndsAt())
+		assert.Equal(t, given, result.ISO8601())
 	}
 }
 
@@ -39,22 +38,22 @@ func TestParseRepeatingIntervalISO8601(t *testing.T) {
 		"R/2019-01-02T21:00:00Z/2022-01-03T21:00:00Z": {
 			Repetitions: nil,
 			RepeatEvery: diff,
-			Interval:    Interval{startsAt: &startsAt, endsAt: &endsAt, duration: nil},
+			Interval:    Interval{StartsAt: startsAt, EndsAt: endsAt, iso8601: "2019-01-02T21:00:00Z/2022-01-03T21:00:00Z"},
 		}, // Time - Time
 		"R/2019-01-02T21:00:00Z/P1W": {
 			Repetitions: nil,
 			RepeatEvery: duration,
-			Interval:    Interval{startsAt: &startsAt, endsAt: nil, duration: &duration},
+			Interval:    Interval{StartsAt: startsAt, EndsAt: startsAt.Add(duration), iso8601: "2019-01-02T21:00:00Z/P1W"},
 		}, // Time - Duration
 		"R/P1W/2022-01-03T21:00:00Z": {
 			Repetitions: nil,
 			RepeatEvery: duration,
-			Interval:    Interval{startsAt: nil, endsAt: &endsAt, duration: &duration},
+			Interval:    Interval{StartsAt: endsAt.Add(-duration), EndsAt: endsAt, iso8601: "P1W/2022-01-03T21:00:00Z"},
 		}, // Duration - Time
 		"R10/P1W/2022-01-03T21:00:00Z": {
 			Repetitions: &repetitions,
 			RepeatEvery: duration,
-			Interval:    Interval{startsAt: nil, endsAt: &endsAt, duration: &duration},
+			Interval:    Interval{StartsAt: endsAt.Add(-duration), EndsAt: endsAt, iso8601: "P1W/2022-01-03T21:00:00Z"},
 		}, // Duration - Time
 	}
 	for given, expected := range expectations {

@@ -2,7 +2,6 @@ package timeinterval
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -41,8 +40,8 @@ func ParseIntervalISO8601(s string) (*Interval, error) {
 	if partTypes[0] == typeDuration && partTypes[1] == typeDuration {
 		return nil, errors.New("interval cannot consist of two durations")
 	}
-
-	in := Interval{}
+	var startsAt, endsAt *time.Time
+	var duration *time.Duration
 	for i := 0; i < len(partTypes); i++ {
 		switch partTypes[i] {
 		case typeDuration:
@@ -50,20 +49,20 @@ func ParseIntervalISO8601(s string) (*Interval, error) {
 			if err != nil {
 				return nil, err
 			}
-			in.duration = &d
+			duration = &d
 		case typeTime:
 			t, err := parseTimeString(parts[i])
 			if err != nil {
 				return nil, err
 			}
 			if i == 0 {
-				in.startsAt = &t
+				startsAt = &t
 			} else {
-				in.endsAt = &t
+				endsAt = &t
 			}
 		}
 	}
-	return &in, nil
+	return NewInterval(startsAt, endsAt, duration, &s)
 }
 
 // ParseRepeatingIntervalISO8601 accepts a string with the ISO8601 "repeating interval" format
@@ -95,9 +94,7 @@ func ParseRepeatingIntervalISO8601(s string) (*Repeating, error) {
 	ri.Interval = *in
 	// Set "Duration"
 	d := ri.Interval.Duration()
-	if d != nil {
-		ri.RepeatEvery = *d
-	}
+	ri.RepeatEvery = d
 	return &ri, nil
 }
 
@@ -164,21 +161,4 @@ func parseDurationString(s string) (time.Duration, error) {
 		}
 	}
 	return d, nil
-}
-
-func durationToISO8601(d time.Duration) (string, error) {
-	durationLeft := d
-	iso := "P"
-	if durationLeft >= durationWeek {
-		iso += fmt.Sprintf("%dW", durationLeft/durationWeek)
-		durationLeft -= (durationLeft / durationWeek) * durationWeek
-	}
-	if durationLeft >= durationDay {
-		iso += fmt.Sprintf("%dD", durationLeft/durationDay)
-		durationLeft -= (durationLeft / durationDay) * durationDay
-	}
-	if durationLeft != 0 {
-		return iso, errors.New("duration could not be represented with the supported duration types")
-	}
-	return iso, nil
 }

@@ -6,11 +6,9 @@ import (
 	"time"
 )
 
-// Repeating describes an interval with recurring events distributed evenly by a fixed duration.
-// The interval can be bounded by either:
-// a fixed startsAt and endsAt
-// or by a fixed startsAt with a fixed number of Repetitions from which the endsAt will be derived.
-// or by a fixed endsAt with a fixed number of Repetitions from which the startsAt will be derived.
+// Repeating describes an interval with recurring events distributed evenly by the duration of the interval.
+// The number of Repetitions determine the bounds of the repeating interval (from StartsAt).
+// When Repetitions is unset, then the repeating interval will be unbounded and recur infinitely long into the future.
 type Repeating struct {
 	Interval    Interval
 	RepeatEvery time.Duration
@@ -34,31 +32,28 @@ func (in *Repeating) UnmarshalJSON(data []byte) error {
 
 // MarshalJSON marshal Repeating into an ISO8601 "repeating interval" string.
 func (in Repeating) MarshalJSON() ([]byte, error) {
-	s, err := in.ISO8601()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(s)
+	return json.Marshal(in.ISO8601())
 }
 
 // StartsAt returns the time the interval begins.
-// When possible StartsAt will be derived using the Duration and Repetitions fields if Interval.StartsAt is unset.
+// If "Repetitions" is nil, then this indicates the repeating interval is unbounded
+// and as a result StartsAt() will return nil.
 func (in Repeating) StartsAt() *time.Time {
-	if in.isStartsAtBoundedByRepetitions() {
-		startsAt := in.Interval.EndsAt().Add(-time.Duration(*in.Repetitions) * in.RepeatEvery)
-		return &startsAt
+	if in.Repetitions == nil {
+		return nil
 	}
-	return in.Interval.StartsAt()
+	return &in.Interval.StartsAt
 }
 
 // EndsAt returns the time the interval ends.
-// When possible EndsAt will be derived using the Duration and Repetitions fields if Interval.EndsAt is unset.
+// If "Repetitions" is nil, then this indicates the repeating interval is unbounded
+// and as a result EndsAt() will return nil.
 func (in Repeating) EndsAt() *time.Time {
-	if in.isEndsAtBoundedByRepetitions() {
-		endsAt := in.Interval.StartsAt().Add(time.Duration(*in.Repetitions) * in.RepeatEvery)
-		return &endsAt
+	if in.Repetitions == nil {
+		return nil
 	}
-	return in.Interval.EndsAt()
+	endsAt := in.Interval.StartsAt.Add(time.Duration(*in.Repetitions) * in.RepeatEvery)
+	return &endsAt
 }
 
 // Duration returns the duration the repeating interval will be active for or nil if it is unbounded.
@@ -73,21 +68,23 @@ func (in Repeating) Duration() *time.Duration {
 }
 
 // Started returns a boolean indicating if the interval has begun at the given time.
+// When the repeating interval is unbounded, then this function will always return true.
 func (in Repeating) Started(t time.Time) bool {
-	if in.isStartsAtBoundedByRepetitions() {
-		startsAt := in.StartsAt()
-		return t.Equal(*startsAt) || t.After(*startsAt)
+	startsAt := in.StartsAt()
+	if startsAt == nil {
+		return true
 	}
-	return in.Interval.Started(t)
+	return t.Equal(*startsAt) || t.After(*startsAt)
 }
 
 // Ended returns a boolean indicating if the interval has ended at the given time.
+// When the repeating interval is unbounded, then this function will always return false.
 func (in Repeating) Ended(t time.Time) bool {
-	if in.isEndsAtBoundedByRepetitions() {
-		endsAt := in.EndsAt()
-		return t.After(*endsAt)
+	endsAt := in.EndsAt()
+	if endsAt == nil {
+		return false
 	}
-	return in.Interval.Ended(t)
+	return t.After(*endsAt)
 }
 
 // In returns a boolean indicating if the given time is when the interval is active (Started and not Ended)
@@ -104,8 +101,7 @@ func (in Repeating) Next(t time.Time) *time.Time {
 	if in.Ended(t) || in.RepeatEvery == 0 {
 		return nil
 	}
-	startsAt := in.StartsAt()
-	diff := t.Sub(*startsAt)
+	diff := t.Sub(in.Interval.StartsAt)
 	mod := diff % in.RepeatEvery
 	nxt := t.Add(in.RepeatEvery - mod)
 	if in.Ended(nxt) {
@@ -115,49 +111,10 @@ func (in Repeating) Next(t time.Time) *time.Time {
 }
 
 // ISO8691 returns the repeating interval formatted as an ISO8601 repeating interval string.
-// An error is returned if formatting fails.
-func (in Repeating) ISO8601() (string, error) {
-	startsAt := in.Interval.StartsAt()
-	endsAt := in.Interval.EndsAt()
-	var startString string
-	var endString string
-	if in.Interval.StartsAtDerivedFromDuration() {
-		d := in.RepeatEvery
-		s, err := durationToISO8601(d)
-		startString = s
-		if err != nil {
-			return "", err
-		}
-		s = endsAt.Format(time.RFC3339)
-		endString = s
-
-	} else if in.Interval.EndsAtDerivedFromDuration() {
-		d := in.RepeatEvery
-		s, err := durationToISO8601(d)
-		endString = s
-		if err != nil {
-			return "", err
-		}
-		s = startsAt.Format(time.RFC3339)
-		startString = s
-	} else {
-		startString = startsAt.Format(time.RFC3339)
-		endString = endsAt.Format(time.RFC3339)
-	}
+func (in Repeating) ISO8601() string {
+	iso := in.Interval.ISO8601()
 	if in.Repetitions != nil {
-		return fmt.Sprintf("R%d/%s/%s", *in.Repetitions, startString, endString), nil
+		return fmt.Sprintf("R%d/%s", *in.Repetitions, iso)
 	}
-	return fmt.Sprintf("R/%s/%s", startString, endString), nil
-}
-
-// isStartsAtBoundedByRepetitions returns a boolean which indicate if startsAt is unset
-// and can be derived by using the Duration and Repetitions fields.
-func (in Repeating) isStartsAtBoundedByRepetitions() bool {
-	return in.Repetitions != nil && in.Interval.StartsAt() == nil && in.Interval.EndsAt() != nil
-}
-
-// isEndsAtBoundedByRepetitions returns a boolean which indicate if endsAt is unset
-// and can be derived by using the Duration and Repetitions fields.
-func (in Repeating) isEndsAtBoundedByRepetitions() bool {
-	return in.Repetitions != nil && in.Interval.EndsAt() == nil && in.Interval.StartsAt() != nil
+	return fmt.Sprintf("R/%s", iso)
 }
