@@ -8,8 +8,7 @@ import (
 )
 
 func ExampleInterval() {
-	now, err := time.Parse(time.RFC3339, "2019-01-02T21:00:00Z")
-	fmt.Println(err)
+	now, _ := time.Parse(time.RFC3339, "2019-01-02T21:00:00Z")
 	startsAt := now.Add(-1 * time.Hour)
 	endsAt := now.Add(5 * time.Hour)
 
@@ -27,7 +26,6 @@ func ExampleInterval() {
 
 	// Output:
 	// <nil>
-	// <nil>
 	// 2019-01-02T20:00:00Z
 	// 2019-01-03T02:00:00Z
 	// true
@@ -39,8 +37,7 @@ func ExampleInterval() {
 }
 
 func ExampleRepeating() {
-	now, err := time.Parse(time.RFC3339, "2019-01-02T21:00:00Z")
-	fmt.Println(err)
+	now, _ := time.Parse(time.RFC3339, "2019-01-02T21:00:00Z")
 	startsAt := now.Add(-15 * time.Minute)
 	duration := 15 * time.Minute
 	repetitions := uint32(5)
@@ -61,7 +58,6 @@ func ExampleRepeating() {
 	fmt.Println(in.Next(now).Format(time.RFC3339))
 
 	// Output:
-	// <nil>
 	// <nil>
 	// 2019-01-02T20:45:00Z
 	// 2019-01-02T22:00:00Z
