@@ -60,11 +60,7 @@ func NewInterval(startsAt, endsAt *time.Time, duration *time.Duration) (*Interva
 			in.Format = ISOFormatDurationAndTime
 		}
 	}
-	err := in.Validate()
-	if err != nil {
-		return nil, err
-	}
-	return &in, nil
+	return &in, in.Validate()
 }
 
 // Validate verifies that validity of the interval and returns an error if the:
